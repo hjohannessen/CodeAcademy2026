@@ -9,7 +9,7 @@ on:
 
 jobs:
   ci:
-    runs-on: ${{ vars.RUNNER || 'self-hosted' }}
+    runs-on: ${{ vars.RUNNER || 'ubuntu-latest' }}
 
     defaults:
       run:
