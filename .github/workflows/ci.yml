@@ -4,7 +4,7 @@ on:
     branches:
       - main
     paths:
-      - 'CodeAcademy2026/1-DevOps/idempotweet/**'
+      - '1-DevOps/idempotweet/**'
   workflow_call:
 
 jobs:
