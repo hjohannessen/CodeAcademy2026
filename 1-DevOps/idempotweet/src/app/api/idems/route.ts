@@ -4,7 +4,7 @@ import { demoIdems } from "@/lib/demo-data";
 import type { PaginatedIdems } from "@/types/idem";
 
 const DEFAULT_PAGE_SIZE = 20;
-// just a comment
+
 // Initialize database on first request
 let initialized = false;
 
