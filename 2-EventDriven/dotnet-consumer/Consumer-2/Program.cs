@@ -5,7 +5,7 @@ using CodeAcademy.DotnetConsumer.Common.Config;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
-Console.WriteLine("Starting Consumer-1 application...");
+Console.WriteLine("Starting Consumer-2 application...");
 
 // Establish connection to RabbitMQ
 using var connection = await ConnectionHelper.ConnectAsync();
@@ -22,7 +22,7 @@ Console.WriteLine("Connected to RabbitMQ");
 
 // Create a channel and declare the queue
 using var channel = await connection.CreateChannelAsync();
-string queueName = "consumer-1";
+string queueName = "chatHerman";
 await channel.QueueDeclareAsync(
     queue: queueName,
     durable: true,
@@ -34,9 +34,7 @@ await channel.QueueDeclareAsync(
 // Set up a consumer to listen for messages
 var consumer = new AsyncEventingBasicConsumer(channel);
 
-channel
-    .QueueBindAsync(queue: queueName, exchange: "CA26", routingKey: "hello.man", arguments: null)
-    .Wait();
+channel.QueueBindAsync(queue: queueName, exchange: "chat", routingKey: "", arguments: null).Wait();
 
 // Handle received messages
 consumer.ReceivedAsync += async (sender, eventArgs) =>

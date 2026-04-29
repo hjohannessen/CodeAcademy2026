@@ -9,6 +9,14 @@
       {
         "Path": "Consumer\\Consumer.csproj",
         "Action": "Start"
+      },
+      {
+        "Path": "Consumer-2\\Consumer-2.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "Consumer-3\\Consumer-3.csproj",
+        "Action": "Start"
       }
     ]
   }

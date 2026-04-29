@@ -13,19 +13,24 @@ public class ConnectionHelper
 
     public static async Task<IConnection> ConnectAsync()
     {
-        var rabbitMqUri = Configuration["RabbitMQ:URI"]
-            ?? throw new InvalidOperationException("RabbitMQ:URI is not configured (set via appsettings.json or RabbitMQ__URI env var)");
+        var rabbitMqUri =
+            Configuration["RabbitMQRemote:URI"]
+            ?? throw new InvalidOperationException(
+                "RabbitMQ:URI is not configured (set via appsettings.json or RabbitMQ__URI env var)"
+            );
 
-        var factory = new ConnectionFactory { 
+        var factory = new ConnectionFactory
+        {
             Uri = new Uri(rabbitMqUri),
             Ssl = new SslOption
             {
-                Enabled = false,
+                Enabled = true,
                 ServerName = new Uri(rabbitMqUri).Host,
-                CertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true // Accept all certificates (for demo purposes only)
-            }
+                CertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) =>
+                    true // Accept all certificates (for demo purposes only)
+                ,
+            },
         };
-
 
         for (var i = 0; i < 5; i++)
         {
@@ -35,7 +40,8 @@ public class ConnectionHelper
             }
             catch
             {
-                if (i == 4) throw;
+                if (i == 4)
+                    throw;
                 Console.WriteLine($"Connection attempt {i + 1} failed, retrying in 2 seconds...");
                 await Task.Delay(2000);
             }

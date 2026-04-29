@@ -18,25 +18,66 @@ Console.WriteLine("Connected to RabbitMQ");
 
 // Create a channel and declare the queue
 using var channel = await connection.CreateChannelAsync();
-await channel.QueueDeclareAsync(
-    queue: "idem-events",
-    durable: true,
-    exclusive: false,
+
+string exchangeName = "chat";
+
+//await channel.QueueDeclareAsync(
+//    queue: "idem-events",
+//    durable: true,
+//    exclusive: false,
+//    autoDelete: false,
+//    arguments: null
+//);
+
+// Fanout Exchange
+await channel.ExchangeDeclareAsync(
+    exchange: exchangeName,
+    type: ExchangeType.Fanout,
+    durable: false,
     autoDelete: false,
     arguments: null
 );
 
+// Direct Exchange
+//await channel.ExchangeDeclareAsync(
+//    exchange: exchangeName,
+//    type: ExchangeType.Direct,
+//    durable: true,
+//    autoDelete: false,
+//    arguments: null
+//);
+
+// Topic Exchange
+//await channel.ExchangeDeclareAsync(
+//    exchange: exchangeName,
+//    type: ExchangeType.Topic,
+//    durable: true,
+//    autoDelete: false,
+//    arguments: null
+//);
+
+// Headers Exchange
+//await channel.ExchangeDeclareAsync(
+//    exchange: exchangeName,
+//    type: ExchangeType.Headers,
+//    durable: true,
+//    autoDelete: false,
+//    arguments: null
+//);
+
 // Publish messages to the queue with for loop to simulate multiple events
 for (int i = 0; i < 10; i++)
 {
-    var message = $"Idems Event {i + 1} at {DateTime.Now}";
+    //var message = $"Idems Event {i + 1} at {DateTime.Now}";
+    var message = "Jeløy Yacht og Champagne";
 
     var messageBody = JsonSerializer.Serialize(message);
     var body = Encoding.UTF8.GetBytes(messageBody);
 
     await channel.BasicPublishAsync(
-        exchange: string.Empty,
-        routingKey: "idem-events",
+        exchange: exchangeName,
+        //routingKey: i % 2 == 0 ? "hello" : "hello.there",
+        routingKey: string.Empty,
         mandatory: true,
         basicProperties: new BasicProperties { Persistent = true },
         body: body
