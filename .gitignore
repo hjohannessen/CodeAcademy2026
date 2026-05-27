@@ -7,3 +7,5 @@ out/
 bin/
 obj/
 .DS_Store
+/.vs
+/2-EventDriven/dotnet-consumer/.vs
