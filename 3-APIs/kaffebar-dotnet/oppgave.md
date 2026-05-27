@@ -106,7 +106,7 @@ La rammeverket ta seg av input-validering, slik at forretningslogikken slipper!
 ---
 
 ## Del 3: Tilstand og Feilhåndtering
-
+    
 ### Oppgave 5: Hent en spesifikk bestilling (Route Parameters)
 Kunden må kunne sjekke kvitteringen sin.
 * **Mål:** Hente ut en eksisterende bestilling via id.
