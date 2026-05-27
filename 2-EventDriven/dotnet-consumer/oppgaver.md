@@ -20,9 +20,9 @@ Målet med denne workshoppen er at du skal klare å lage og kjøre en docker-con
 2. Sjekk RabbitMQ dashboardet og se at meldingene blir sendt. 
 3. Utvid `Consumer` til å konsumere meldinger fra køen. Du må deklarere og binde konsumenten til en fanout exchangen. Her kan `channel.QueueDeclareAsync`, `channel.QueueBindAsync()`, `channel.BasicAckAsync` og `channel.BasicConsumeAsync` være nyttig. 
 4. Lag deg enda et nytt C#-program `Consumer-2` som deklarerer og binder en ny kø til den samme exchangen. Sørg for at `autoDelete: true`. Denne skal motta nøyaktig de samme meldingene som den forrige køen.
-5. Hva skjer når du stopper programmet `Consumer-2`?
-6. Hva skjer når du starter programmet `Consumer-2` igjen?
-7. Hva skjer hvis `Consumer` og `Consumer-2` lytter på samme kø?
+5. Hva skjer når du stopper programmet `Consumer-2`? // Den forsvinner fra queue-listen i RabbitMQ dashboardet.
+6. Hva skjer når du starter programmet `Consumer-2` igjen? // Den dukker opp igjen.
+7. Hva skjer hvis `Consumer` og `Consumer-2` lytter på samme kø? De mottar de samme meldingene.
 8. Slett køene og exchangene dine.
 
 ### DIRECT
