@@ -1,4 +1,6 @@
+using System.Collections.Concurrent;
 using Kaffebar.Models;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Kaffebar.Controllers;
@@ -7,14 +9,14 @@ namespace Kaffebar.Controllers;
 [Route("orders")]
 public class OrdersController : ControllerBase
 {
-    /// <summary>
-    /// Opprett en ny bestilling. Returnerer 201 Created med Location-header
-    /// som peker på den nye ordren.
-    /// </summary>
+    private static readonly ConcurrentDictionary<Guid, OrderResponse> _orders = new();
+
     [HttpPost(Name = "CreateOrder")]
     [ProducesResponseType(typeof(OrderResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
-    public ActionResult<OrderResponse> CreateOrder([FromBody] CreateOrderRequest request)
+    public Results<CreatedAtRoute<OrderResponse>, BadRequest<ValidationProblemDetails>> CreateOrder(
+        [FromBody] CreateOrderRequest request
+    )
     {
         var order = new OrderResponse(
             OrderId: Guid.NewGuid(),
@@ -27,8 +29,37 @@ public class OrdersController : ControllerBase
             CreatedAt: DateTimeOffset.UtcNow
         );
 
-        // CreatedAtAction krever et tilsvarende GET-endepunkt for å bygge Location-headeren.
-        // Vi har ikke laget GET /orders/{id} ennå (kommer i Oppgave 5), så vi bygger URI-en manuelt.
-        return Created($"/orders/{order.OrderId}", order);
+        _orders[order.OrderId] = order;
+
+        return TypedResults.CreatedAtRoute(order, "GetOrder", new { orderId = order.OrderId });
+    }
+
+    [HttpGet("{orderId:guid}", Name = "GetOrder")]
+    [ProducesResponseType(typeof(OrderResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public Results<Ok<OrderResponse>, NotFound> GetOrder(Guid orderId)
+    {
+        return _orders.TryGetValue(orderId, out var order)
+            ? TypedResults.Ok(order)
+            : TypedResults.NotFound();
+    }
+
+    [HttpPatch("{orderId:guid}", Name = "UpdateOrderStatus")]
+    [ProducesResponseType(typeof(OrderResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public Results<
+        Ok<OrderResponse>,
+        BadRequest<ValidationProblemDetails>,
+        NotFound
+    > UpdateOrderStatus(Guid orderId, [FromBody] UpdateOrderStatusRequest request)
+    {
+        if (!_orders.TryGetValue(orderId, out var order))
+        {
+            return TypedResults.NotFound();
+        }
+        var updatedOrder = order with { Status = Enum.Parse<OrderStatus>(request.Status) };
+        _orders[orderId] = updatedOrder;
+        return TypedResults.Ok(updatedOrder);
     }
 }

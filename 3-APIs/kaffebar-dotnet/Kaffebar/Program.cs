@@ -19,6 +19,8 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 
 builder.Services.AddValidation();
 
+builder.Services.AddProblemDetails();
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -29,6 +31,8 @@ if (app.Environment.IsDevelopment())
     // Scalar gir et moderne, interaktivt UI på /scalar/v1
     // for å utforske og teste API-et.
     app.MapScalarApiReference();
+
+    app.UseStatusCodePages();
 }
 
 // --- Hello Coffee --------------------------------------------------------

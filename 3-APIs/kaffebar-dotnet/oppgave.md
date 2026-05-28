@@ -130,7 +130,7 @@ Ordren må endre tilstand mens baristaen jobber.
 * **Fokus:** Diskusjon!
   - Bør dette være `PUT /orders/{id}` (erstatt hele ordren), `PATCH /orders/{id}` (delvis oppdatering), eller et eget action-endepunkt som `POST /orders/{id}/status`?
   - Modeller et dedikert request-objekt (f.eks. `UpdateOrderStatusRequest`) som kun inneholder det som skal endres. Hvorfor er dette bedre enn å gjenbruke `Order`-typen?
-
+    
 ---
 
 ## Del 4: Avansert Bruk (Bonus/Ekspert)

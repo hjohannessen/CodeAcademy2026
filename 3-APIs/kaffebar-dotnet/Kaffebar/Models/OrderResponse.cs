@@ -8,5 +8,6 @@ public record OrderResponse(
     CoffeeSize Size,
     MilkType MilkType,
     bool ExtraShot,
-    DateTimeOffset CreatedAt
+    DateTimeOffset CreatedAt,
+    OrderStatus Status = OrderStatus.PENDING
 );

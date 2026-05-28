@@ -4,6 +4,17 @@
 GET {{host}}/menu
 Accept: application/json
 
+### Hent spesifikk ordre
+GET {{host}}/orders/b58ed29a-e898-4fc2-b0ba-89c9bcf80668
+Accept: application/json
+
+### Oppdater status på ordre (`PENDING` → `BREWING` → `READY`)
+PATCH {{host}}/orders/b58ed29a-e898-4fc2-b0ba-89c9bcf80668
+Content-Type: application/json
+{
+  "status": "BREWING"
+}
+
 ### Opprett en ny bestilling – gyldig
 POST {{host}}/orders
 Content-Type: application/json
