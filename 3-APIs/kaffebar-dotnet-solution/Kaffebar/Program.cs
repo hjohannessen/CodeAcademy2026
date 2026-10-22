@@ -20,7 +20,7 @@ builder.Services.AddSingleton(eventOptions);
 builder.Services.AddSingleton(baristaOptions);
 
 // --- Oppgave 2: begge stilene i samme prosjekt ---------------------------
-// Controllers for ordrene. GET /menu ligger igjen som Minimal API lenger nede —
+// Controllers for ordrene og brukerne. GET /menu ligger igjen som Minimal API lenger nede —
 // det er ikke en glipp, det er oppgave 2. Se FASIT.md.
 builder.Services.AddControllers()
     .AddJsonOptions(ConfigureJson);
@@ -73,6 +73,7 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
 
 // --- Lagring -------------------------------------------------------------
 builder.Services.AddSingleton<IOrderRepository, InMemoryOrderRepository>();
+builder.Services.AddSingleton<IUserRepository, InMemoryUserRepository>();
 
 // --- Valgfritt: hendelser til RabbitMQ + auto-barista. AV som standard. --
 builder.Services.AddSingleton<OrderEventPublisher>();

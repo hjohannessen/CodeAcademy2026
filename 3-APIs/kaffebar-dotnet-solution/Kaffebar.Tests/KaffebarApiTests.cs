@@ -27,6 +27,9 @@ public class KaffebarApiTests : IClassFixture<WebApplicationFactory<Program>>, I
     /// <summary>Fra seed-dataene: Jonas sin espresso, status PENDING.</summary>
     private const string SeededPending = "0de50001-0000-4000-8000-000000000003";
 
+    /// <summary>Fra brukerseedet: Henrik, den eneste inaktive brukeren.</summary>
+    private const string InactiveUser = "cafe0001-0000-4000-8000-000000000002";
+
     private readonly WebApplicationFactory<Program> _factory;
     private readonly HttpClient _client;
 
@@ -35,9 +38,10 @@ public class KaffebarApiTests : IClassFixture<WebApplicationFactory<Program>>, I
         _factory = factory;
         _client = factory.CreateClient();
 
-        // Lagringen er i minne og delt mellom testene. Uten denne ville rekkefølgen på
+        // Lagringen er i minne og delt mellom testene. Uten disse ville rekkefølgen på
         // testene bestemt om de går grønt.
         factory.Services.GetRequiredService<IOrderRepository>().Reset();
+        factory.Services.GetRequiredService<IUserRepository>().Reset();
     }
 
     public void Dispose() => _client.Dispose();
@@ -299,6 +303,93 @@ public class KaffebarApiTests : IClassFixture<WebApplicationFactory<Program>>, I
 
         Assert.Equal("ok", health.GetProperty("status").GetString());
         Assert.Equal("disabled", health.GetProperty("rabbitmq").GetString());
+    }
+
+    // ----------------------------------------------------- GET /users -------
+
+    [Fact(DisplayName = "GET /users?active=true gir bare de aktive brukerne")]
+    public async Task ListUsers_ActiveTrue_ReturnsOnlyActive()
+    {
+        var response = await _client.GetAsync("/users?active=true");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal("application/json", response.Content.Headers.ContentType?.MediaType);
+
+        var users = await response.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Equal(3, users.GetArrayLength());
+        Assert.All(users.EnumerateArray(),
+            user => Assert.True(user.GetProperty("active").GetBoolean()));
+        Assert.DoesNotContain(users.EnumerateArray(),
+            user => user.GetProperty("id").GetString() == InactiveUser);
+    }
+
+    [Fact(DisplayName = "GET /users uten active gir de samme brukerne som active=true")]
+    public async Task ListUsers_DefaultsToActive()
+    {
+        var withoutFilter = await _client.GetStringAsync("/users");
+        var activeOnly = await _client.GetStringAsync("/users?active=true");
+
+        Assert.Equal(activeOnly, withoutFilter);
+        Assert.DoesNotContain(InactiveUser, withoutFilter);
+    }
+
+    [Fact(DisplayName = "GET /users?active=false gir bare de inaktive brukerne")]
+    public async Task ListUsers_ActiveFalse_ReturnsOnlyInactive()
+    {
+        var users = await _client.GetFromJsonAsync<JsonElement>("/users?active=false");
+
+        var user = Assert.Single(users.EnumerateArray());
+        Assert.Equal(InactiveUser, user.GetProperty("id").GetString());
+        Assert.Equal("Henrik", user.GetProperty("name").GetString());
+        Assert.False(user.GetProperty("active").GetBoolean());
+    }
+
+    [Fact(DisplayName = "brukerne er sortert på navn og har faste uuid-er")]
+    public async Task ListUsers_SortedByNameWithFixedIds()
+    {
+        var users = await _client.GetFromJsonAsync<JsonElement>("/users?active=true");
+
+        Assert.Equal("Emil", users[0].GetProperty("name").GetString());
+        Assert.Equal("Nora", users[1].GetProperty("name").GetString());
+        Assert.Equal("Sigrid", users[2].GetProperty("name").GetString());
+        Assert.Equal("cafe0001-0000-4000-8000-000000000001", users[0].GetProperty("id").GetString());
+        Assert.Equal("cafe0001-0000-4000-8000-000000000004", users[2].GetProperty("id").GetString());
+    }
+
+    [Fact(DisplayName = "ugyldig active i query gir 400 med feltnavnet")]
+    public async Task ListUsers_RejectsInvalidActive()
+    {
+        var response = await _client.GetAsync("/users?active=nope");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal(ProblemJson, response.Content.Headers.ContentType?.MediaType);
+
+        var problem = await response.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Contains("validation-error", problem.GetProperty("type").GetString());
+        Assert.Equal("/users", problem.GetProperty("instance").GetString());
+        Assert.Equal("active", problem.GetProperty("errors")[0].GetProperty("field").GetString());
+    }
+
+    [Fact(DisplayName = "spesifikasjonen beskriver GET /users med active som valgfri parameter")]
+    public async Task OpenApi_DescribesListUsers()
+    {
+        var spec = await _client.GetFromJsonAsync<JsonElement>("/openapi/v1.json");
+        var operation = spec.GetProperty("paths").GetProperty("/users").GetProperty("get");
+
+        Assert.Equal("Hent brukere", operation.GetProperty("summary").GetString());
+
+        var active = Assert.Single(operation.GetProperty("parameters").EnumerateArray());
+        Assert.Equal("active", active.GetProperty("name").GetString());
+        Assert.Equal("query", active.GetProperty("in").GetString());
+        Assert.False(active.TryGetProperty("required", out var isRequired) && isRequired.GetBoolean());
+        Assert.True(active.GetProperty("schema").GetProperty("default").GetBoolean());
+
+        Assert.True(operation.GetProperty("responses").GetProperty("400")
+            .GetProperty("content").TryGetProperty(ProblemJson, out _));
+
+        var userFields = spec.GetProperty("components").GetProperty("schemas").GetProperty("User")
+            .GetProperty("required").EnumerateArray().Select(field => field.GetString());
+        Assert.Equivalent(new[] { "id", "name", "active" }, userFields, strict: true);
     }
 
     // ------------------------------------------------------------ hjelpere --

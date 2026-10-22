@@ -127,6 +127,22 @@ Content-Type: application/json
   "status": "READY"
 }
 
+### Aktive brukere — dummy-data, finnes bare i .NET-sporet
+GET {{host}}/users?active=true
+Accept: application/json
+
+### Uten active -> bare de aktive, samme svar som active=true
+GET {{host}}/users
+Accept: application/json
+
+### Inaktive brukere
+GET {{host}}/users?active=false
+Accept: application/json
+
+### FEIL: active som ikke er true eller false -> 400 med Problem Details
+GET {{host}}/users?active=nope
+Accept: application/json
+
 ### Helsesjekk — Minimal API
 GET {{host}}/health
 Accept: application/json

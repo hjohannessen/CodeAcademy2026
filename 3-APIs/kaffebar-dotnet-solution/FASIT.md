@@ -13,7 +13,7 @@ cd 3-APIs/kaffebar-dotnet-solution/Kaffebar
 dotnet run                      # http://localhost:5035, åpner Scalar
 
 cd ..
-dotnet test                     # 20 tester
+dotnet test                     # 26 tester
 ```
 
 | URL | Hva |
@@ -53,15 +53,15 @@ ikke helt beskrev det API-et faktisk gjør. Den mappa har ingen motpart i Java-p
 kaffebar-dotnet-solution/
 ├── Kaffebar/
 │   ├── Program.cs            # oppsett + Minimal API-ene (GET /menu, GET /health)
-│   ├── Controllers/          # OrdersController — oppgave 2
+│   ├── Controllers/          # OrdersController — oppgave 2. UsersController (dummy, kun .NET)
 │   ├── Models/               # record-typer, enums, validering
-│   ├── Storage/              # IOrderRepository + ConcurrentDictionary + seed
+│   ├── Storage/              # IOrderRepository, IUserRepository + ConcurrentDictionary + seed
 │   ├── Errors/               # ProblemFactory — RFC 7807, oppgave 6
 │   ├── Auth/                 # oppgave 10, AV som standard
 │   ├── OpenApi/              # det rammeverket ikke klarer å utlede selv
 │   ├── Events/               # valgfritt: RabbitMQ + auto-barista, AV som standard
 │   └── Kaffebar.http
-├── Kaffebar.Tests/           # 20 WebApplicationFactory-tester
+├── Kaffebar.Tests/           # 26 WebApplicationFactory-tester
 ├── Oppgave9/                 # polymorfisme, eget kjørbart prosjekt + NOTAT.md
 └── FASIT.md                  # denne
 ```
