@@ -15,20 +15,23 @@ public partial class KaffebarRepository
             Id = Guid.NewGuid(),
             CustomerName = customerName,
             Status = OrderStatus.Pending,
-            CreatedAt = now
+            CreatedAt = now,
+            TotalPrice = lines.Sum(l => l.Quantity * l.UnitPrice),
         };
         order.StatusHistory.Add(new StatusChange { Status = OrderStatus.Pending, ChangedAt = now });
 
         foreach (var line in lines)
         {
-            order.Lines.Add(new OrderLine
-            {
-                DrinkName = line.DrinkName,
-                Size = line.Size,
-                Quantity = line.Quantity,
-                UnitPrice = line.UnitPrice,
-                BeanId = line.BeanId
-            });
+            order.Lines.Add(
+                new OrderLine
+                {
+                    DrinkName = line.DrinkName,
+                    Size = line.Size,
+                    Quantity = line.Quantity,
+                    UnitPrice = line.UnitPrice,
+                    BeanId = line.BeanId,
+                }
+            );
         }
 
         db.Orders.Add(order);
@@ -39,8 +42,10 @@ public partial class KaffebarRepository
     /// <summary>Kunden angrer på én av linjene.</summary>
     public async Task RemoveLineAsync(Guid orderId, int lineId)
     {
-        var order = await db.Orders.SingleAsync(o => o.Id == orderId);
+        var order = await db.Orders.Include(o => o.Lines).SingleAsync(o => o.Id == orderId);
+
         order.Lines.RemoveAll(l => l.Id == lineId);
+        order.TotalPrice = order.Lines.Sum(l => l.Quantity * l.UnitPrice);
         await db.SaveChangesAsync();
     }
 }
