@@ -14,7 +14,8 @@ public static class KaffebarDb
         string connectionString,
         Action<string>? logSql = null,
         QueryCounter? counter = null,
-        bool lazyLoading = false)
+        bool lazyLoading = false
+    )
     {
         var builder = new DbContextOptionsBuilder<KaffebarDbContext>()
             .UseNpgsql(connectionString)
@@ -27,9 +28,20 @@ public static class KaffebarDb
         {
             builder
                 .LogTo(
-                    (id, level) => id == RelationalEventId.CommandExecuted || id == RelationalEventId.CommandError
-                        || (level >= LogLevel.Warning && id.Name?.StartsWith(DbLoggerCategory.Query.Name) == true),
-                    data => logSql(data.LogLevel >= LogLevel.Warning ? $"{data.LogLevel}: {data.EventIdCode}\n{data}" : $"{data}"))
+                    (id, level) =>
+                        id == RelationalEventId.CommandExecuted
+                        || id == RelationalEventId.CommandError
+                        || (
+                            level >= LogLevel.Warning
+                            && id.Name?.StartsWith(DbLoggerCategory.Query.Name) == true
+                        ),
+                    data =>
+                        logSql(
+                            data.LogLevel >= LogLevel.Warning
+                                ? $"{data.LogLevel}: {data.EventIdCode}\n{data}"
+                                : $"{data}"
+                        )
+                )
                 .EnableSensitiveDataLogging();
         }
 
@@ -40,6 +52,7 @@ public static class KaffebarDb
         // Microsoft.EntityFrameworkCore.Proxies er allerede installert.
         if (lazyLoading)
         {
+            builder.UseLazyLoadingProxies();
             // TODO 1B: skru på lazy loading her.
         }
 

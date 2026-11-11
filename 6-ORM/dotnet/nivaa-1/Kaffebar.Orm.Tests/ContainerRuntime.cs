@@ -35,7 +35,7 @@ internal static class ContainerRuntime
 
         if (RunningPodmanMachine() is { } podman)
         {
-            TestcontainersSettings.ResourceReaperEnabled = false;
+            TestcontainersSettings.ResourceReaperEnabled = true;
             return podman;
         }
 
@@ -44,11 +44,15 @@ internal static class ContainerRuntime
 
         (string Name, string? Path, bool IsPodman)[] sockets =
         [
-            ("Podman (Linux)", xdgRuntime is null ? null : Path.Combine(xdgRuntime, "podman", "podman.sock"), true),
+            (
+                "Podman (Linux)",
+                xdgRuntime is null ? null : Path.Combine(xdgRuntime, "podman", "podman.sock"),
+                true
+            ),
             ("Docker Desktop", Path.Combine(home, ".docker", "run", "docker.sock"), false),
             ("Rancher Desktop", Path.Combine(home, ".rd", "docker.sock"), false),
             ("Colima", Path.Combine(home, ".colima", "default", "docker.sock"), false),
-            ("Standard socket", "/var/run/docker.sock", false)
+            ("Standard socket", "/var/run/docker.sock", false),
         ];
 
         foreach (var (name, path, isPodman) in sockets)
@@ -62,7 +66,10 @@ internal static class ContainerRuntime
             return (new Uri($"unix://{path}"), $"{name} ({path})");
         }
 
-        return (null, "fant ingen kjent socket som svarer, Testcontainers prøver sine egne standarder");
+        return (
+            null,
+            "fant ingen kjent socket som svarer, Testcontainers prøver sine egne standarder"
+        );
     }
 
     /// <summary>
@@ -73,17 +80,21 @@ internal static class ContainerRuntime
     private static (Uri, string)? RunningPodmanMachine()
     {
         var machines = Podman("machine", "list", "--format", "{{.Name}}|{{.Running}}");
-        var running = machines?
-            .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+        var running = machines
+            ?.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
             .Select(line => line.Split('|'))
-            .Where(parts => parts.Length == 2 && parts[1].Equals("true", StringComparison.OrdinalIgnoreCase))
+            .Where(parts =>
+                parts.Length == 2 && parts[1].Equals("true", StringComparison.OrdinalIgnoreCase)
+            )
             .Select(parts => parts[0].TrimEnd('*'))
             .FirstOrDefault();
         if (running is null)
             return null;
 
         // Windows: en named pipe. Alt annet: en unix-socket.
-        var field = OperatingSystem.IsWindows() ? "{{.ConnectionInfo.PodmanPipe.Path}}" : "{{.ConnectionInfo.PodmanSocket.Path}}";
+        var field = OperatingSystem.IsWindows()
+            ? "{{.ConnectionInfo.PodmanPipe.Path}}"
+            : "{{.ConnectionInfo.PodmanSocket.Path}}";
         var path = Podman("machine", "inspect", running, "--format", field)?.Split('\n')[0].Trim();
         if (string.IsNullOrEmpty(path))
             return null;
@@ -99,7 +110,11 @@ internal static class ContainerRuntime
     {
         try
         {
-            var info = new ProcessStartInfo("podman") { RedirectStandardOutput = true, RedirectStandardError = true };
+            var info = new ProcessStartInfo("podman")
+            {
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+            };
             foreach (var argument in arguments)
                 info.ArgumentList.Add(argument);
 
@@ -126,7 +141,11 @@ internal static class ContainerRuntime
 
         try
         {
-            using var socket = new Socket(AddressFamily.Unix, SocketType.Stream, ProtocolType.Unspecified);
+            using var socket = new Socket(
+                AddressFamily.Unix,
+                SocketType.Stream,
+                ProtocolType.Unspecified
+            );
             socket.Connect(new UnixDomainSocketEndPoint(path));
             return true;
         }
